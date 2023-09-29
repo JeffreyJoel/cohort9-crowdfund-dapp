@@ -17,6 +17,8 @@ const Campaign = () => {
     if (state === "NOT_FOUND") return navigate("/");
     if (state === "LOADING") return <p>Loading...</p>;
 
+    // console.log(campaign);
+
     const handleContribute = async () => {
         if (!isActive || !provider) return;
         if (amountInput <= 0) return alert("Enter a non-zero amount!");
@@ -115,6 +117,20 @@ const Campaign = () => {
                                 Funding Goal -{" "}
                                 {formatEther(campaign?.fundingGoal)} ETH
                             </p>
+                            <p className="mt-2 font-bold text-gray-500">
+                                Contributors:{" "}
+                               
+                            </p>
+                            <ul >
+                                {
+                                    !!campaign &&
+                                    campaign.contributors.map((contributor, index) => (
+                                        // <Campaign key={index} campaign={campaign} />
+                                        <li key={index}>
+                                            {contributor}
+                                        </li>
+                                    ))}
+                            </ul>
                         </div>
                     </div>
                 </div>

@@ -25,6 +25,11 @@ const useAllCampaigns = () => {
 
                 const campaignResults = await Promise.all(campaignPromises);
 
+                const contributorsPromises = campaignsKeys.map((id) =>
+                    contract.getContributors(id)
+                );
+                const contributorsResults = await Promise.all(contributorsPromises);
+                console.log(contributorsResults);
                 const campaignDetails = campaignResults.map(
                     (details, index) => ({
                         id: campaignsKeys[index],
@@ -34,7 +39,7 @@ const useAllCampaigns = () => {
                         durationTime: Number(details.durationTime),
                         isActive: details.isActive,
                         fundingBalance: details.fundingBalance,
-                        contributors: details.contributors,
+                        contributors: contributorsResults[index],
                     })
                 );
 
@@ -47,8 +52,31 @@ const useAllCampaigns = () => {
         fetchAllCampaigns();
 
         // Listen for event
-        const handleProposeCampaignEvent = (id, title, amount, duration) => {
-            console.log({ id, title, amount, duration });
+        const  handleProposeCampaignEvent = async (id, title, amount, duration) => {
+            try {
+                const contract = await getCrowdfundContract(provider, false);
+                const campaignStruct = await contract.crowd(id);
+                const contributors = await contract.getContributors(id);
+                const newCampaign = {
+                    id: id,
+                    title: campaignStruct.title,
+                    fundingGoal: campaignStruct.fundingGoal,
+                    owner: campaignStruct.owner,
+                    durationTime: Number(campaignStruct.durationTime),
+                    isActive: campaignStruct.isActive,
+                    fundingBalance: campaignStruct.fundingBalance,
+                    contributors: contributors,
+                };
+        
+             setCampaigns(...campaigns, newCampaign);
+        
+                console.log({ id, title, amount, duration });
+            } catch (error) {
+                console.error("Error proposing campaign:", error);
+            }
+            // console.log({ id, title, amount, duration });
+            
+            // setCampaigns(...campaigns, )
         };
         const contract = getCrowdfundContractWithProvider(provider);
         contract.on("ProposeCampaign", handleProposeCampaignEvent);
@@ -56,7 +84,7 @@ const useAllCampaigns = () => {
         return () => {
             contract.off("ProposeCampaign", handleProposeCampaignEvent);
         };
-    }, [campaignNo, provider]);
+    }, [campaignNo, provider, campaigns]);
 
     return campaigns;
 };
